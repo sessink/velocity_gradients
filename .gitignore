@@ -1,0 +1,35 @@
+# hidden files, force-add gitignore
+.*
+!/.gitignore
+
+# python
+__pycache__/
+*.py[cod]
+*$py.class
+**.ipynb
+**.so
+**.o
+
+# files
+**.nc
+**.mat
+**.pdf
+**.png
+**.pkl
+**.cdf
+
+# folders
+/viz/*.pdf
+/viz/*.dot
+/benchmark/*
+/figures/*
+/data/*
+/literature/*
+/papers_to_read/*
+/src/pwp/
+/presentations/
+/src/old/
+/manuscript/*
+/old/*
+/src_from_visnu/*
+/src_old/*

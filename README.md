@@ -1,2 +1,1 @@
-# velocity_gradients
-Project to compute velocity gradients from swarms of drifters.
+Scripts to estimate the velocity gradients from swarms of Lagrangian drifters.
