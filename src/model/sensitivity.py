@@ -57,6 +57,13 @@ def make_n_hexs(L, skew, N, M):
     return x, y
 
 
+def calc_aspect(xs, ys):
+    points = np.vstack([xs, ys])
+    cov = np.cov(points)
+    w, v = np.linalg.eig(cov)
+    return bn.nanmin(w) / bn.nanmax(w)
+
+
 def least_square_method(x0, y0, u0, v0, switch):
     # TODO: vectorize this?
 
@@ -93,13 +100,12 @@ def least_square_method(x0, y0, u0, v0, switch):
 
 def bootstrap_ci(zetai_mean, vorti, N):
     n_iterations = 1000
-    n_size = int( N* 0.50)
+    n_size = int(N * 0.50)
     alpha = 0.95  # 95% confidence interval
 
     statss = []
     for i in range(n_iterations):
         sample_ind = resample(np.arange(N), n_samples=n_size)
-        #error = np.var(zetai_mean[sample_ind]-vorti[sample_ind])/np.var(zetai_mean[sample_ind])
         error = stats.pearsonr(zetai_mean[sample_ind], vorti[sample_ind])[0]**2
         statss.append(error)
 
@@ -168,13 +174,14 @@ def sensitivity_length(filt, fu, fv, fzeta):
     M = 3
     llist = np.arange(1, 30, 1).astype(float)
     llist = np.insert(llist, 0, 0.5)
+    skew=1
 
     error_l = []
     error_l_ci = []
     for l, L in enumerate(llist):
         if l % 10 == 0:
             print(l)
-        xi, yi = make_n_hexs(L, 1, N, M)
+        xi, yi = make_n_hexs(L, skew, N, M)
 
         ui = np.zeros((N, M))
         vi = np.zeros((N, M))
@@ -203,6 +210,94 @@ def sensitivity_length(filt, fu, fv, fzeta):
     return df
 
 
+def sensitivity_number(filt, fu, fv, fzeta):
+    '''
+    least square method varying number of drifter per cluster
+    '''
+    N = 2500
+    L = 10
+    mlist = np.arange(3, 21)
+    skew=1
+
+    error_l = []
+    error_l_ci = []
+    for l, M in enumerate(mlist):
+        if l % 2 == 0:
+            print(l)
+        xi, yi = make_n_hexs(L, skew, N, M)
+
+        ui = np.zeros((N, M))
+        vi = np.zeros((N, M))
+        zeta_at_mean = np.zeros(N)
+        for i in range(N):
+            for j in range(xi[1, :].size):
+                ui[i, j] = fu(yi[i, j], xi[i, j])
+                vi[i, j] = fv(yi[i, j], xi[i, j])
+            zeta_at_mean[i] = fzeta(bn.nanmean(yi[i]), bn.nanmean(xi[i]))
+
+        vort_drifters = np.zeros(N)
+        for i in range(N):
+            vort_drifters[i], _, _ = least_square_method(
+                xi[i, :], yi[i, :], ui[i, :], vi[i, :], 'inv')
+
+        #error_l[l] = np.var(zetai_mean-vorti)/np.var(zetai_mean)
+        error_l.append(stats.pearsonr(zeta_at_mean, vort_drifters)[0]**2)
+        error_l_ci.append(bootstrap_ci(zeta_at_mean, vort_drifters, N))
+
+    df = pd.DataFrame(index=np.asarray(mlist))
+    df['error'] = np.asarray(error_l)
+    df['ci_low'] = np.asarray(error_l_ci)[:, 0]
+    df['ci_high'] = np.asarray(error_l_ci)[:, 1]
+    df['filter'] = filt
+
+    return df
+
+
+def sensitivity_aspect(filt, fu, fv, fzeta):
+    '''
+    least square method varying number of drifter per cluster
+    '''
+    N = 2500
+    L = 2
+    M = 3
+    skewlist = np.arange(1, 30, 1)
+
+    aspect = []
+    error_l = []
+    error_l_ci = []
+    for l, skew in enumerate(skewlist):
+        if l % 10 == 0:
+            print(l)
+        xi, yi = make_n_hexs(L, skew, N, M)
+
+        ui = np.zeros((N, M))
+        vi = np.zeros((N, M))
+        zeta_at_mean = np.zeros(N)
+        for i in range(N):
+            for j in range(xi[1, :].size):
+                ui[i, j] = fu(yi[i, j], xi[i, j])
+                vi[i, j] = fv(yi[i, j], xi[i, j])
+            zeta_at_mean[i] = fzeta(bn.nanmean(yi[i]), bn.nanmean(xi[i]))
+
+        vort_drifters = np.zeros(N)
+        for i in range(N):
+            vort_drifters[i], _, _ = least_square_method(
+                xi[i, :], yi[i, :], ui[i, :], vi[i, :], 'lstsq')
+
+        #error_l[l] = np.var(zetai_mean-vorti)/np.var(zetai_mean)
+        aspect.append(calc_aspect(xi[0, :], yi[0, :]))
+        error_l.append(stats.pearsonr(zeta_at_mean, vort_drifters)[0]**2)
+        error_l_ci.append(bootstrap_ci(zeta_at_mean, vort_drifters, N))
+
+    df = pd.DataFrame(index=np.asarray(aspect))
+    df['error'] = np.asarray(error_l)
+    df['ci_low'] = np.asarray(error_l_ci)[:, 0]
+    df['ci_high'] = np.asarray(error_l_ci)[:, 1]
+    df['filter'] = filt
+
+    return df
+
+
 # %% MAIN
 # zgrid_path = 'data/psom/zgrid.out'
 # model_path = 'data/psom/full_08325.cdf'
@@ -210,8 +305,16 @@ dat = read_model_field(snakemake.input[0], snakemake.input[1])
 fu, fv, fzeta = filter_fields(dat)
 
 length_bucket = []
-for i,filt in enumerate([0,10,20]):
-    length_bucket.append(sensitivity_length(filt, fu=fu[i], fv=fv[i],
-                                            fzeta=fzeta[i]))
+number_bucket = []
+aspect_bucket = []
+for i, filt in enumerate([0, 10, 20]):
+    length_bucket.append(
+        sensitivity_length(filt, fu=fu[i], fv=fv[i], fzeta=fzeta[i]))
+    number_bucket.append(
+        sensitivity_number(filt, fu=fu[i], fv=fv[i], fzeta=fzeta[i]))
+    aspect_bucket.append(
+        sensitivity_aspect(filt, fu=fu[i], fv=fv[i], fzeta=fzeta[i]))
 
-pd.concat(length_bucket).reset_index().to_feather(str(snakemake.output))
+pd.concat(length_bucket).reset_index().to_feather(str(snakemake.output[0]))
+pd.concat(number_bucket).reset_index().to_feather(str(snakemake.output[1]))
+pd.concat(aspect_bucket).reset_index().to_feather(str(snakemake.output[2]))
