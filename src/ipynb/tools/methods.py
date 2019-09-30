@@ -5,7 +5,6 @@ def least_square_method(x0, y0, u0, v0, method):
     import numpy as np
     import scipy.linalg as la
     import gsw
-
     ncc = x0.size
     dlon= (x0- np.nanmean(x0)) * 1000
     dlat= (y0 - np.nanmean(y0)) * 1000
