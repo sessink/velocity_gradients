@@ -38,29 +38,29 @@ def filter_fields(dat):
     from scipy import interpolate
     from scipy.ndimage import gaussian_filter
 
-    dat['vor_10km'] = (('x', 'y'),
+    dat['vor_5km'] = (('x', 'y'),
                        gaussian_filter(dat.vor, sigma=5, mode='wrap'))
-    dat['u_10km'] = (('x', 'y'), gaussian_filter(dat.u, sigma=5, mode='wrap'))
-    dat['v_10km'] = (('x', 'y'), gaussian_filter(dat.v, sigma=5, mode='wrap'))
-    dat['vor_20km'] = (('x', 'y'),
+    dat['u_5km'] = (('x', 'y'), gaussian_filter(dat.u, sigma=5, mode='wrap'))
+    dat['v_5km'] = (('x', 'y'), gaussian_filter(dat.v, sigma=5, mode='wrap'))
+    dat['vor_10km'] = (('x', 'y'),
                        gaussian_filter(dat.vor, sigma=10, mode='wrap'))
-    dat['u_20km'] = (('x', 'y'), gaussian_filter(dat.u, sigma=10, mode='wrap'))
-    dat['v_20km'] = (('x', 'y'), gaussian_filter(dat.v, sigma=10, mode='wrap'))
+    dat['u_10km'] = (('x', 'y'), gaussian_filter(dat.u, sigma=10, mode='wrap'))
+    dat['v_10km'] = (('x', 'y'), gaussian_filter(dat.v, sigma=10, mode='wrap'))
 
     fu0 = interpolate.RectBivariateSpline(dat.x, dat.y, dat.u)
     fv0 = interpolate.RectBivariateSpline(dat.x, dat.y, dat.v)
     fzeta0 = interpolate.RectBivariateSpline(dat.x, dat.y, dat.vor)
     # 10km
+    fu5 = interpolate.RectBivariateSpline(dat.x, dat.y, dat.u_5km)
+    fv5 = interpolate.RectBivariateSpline(dat.x, dat.y, dat.v_5km)
+    fzeta5 = interpolate.RectBivariateSpline(dat.x, dat.y, dat.vor_5km)
+    # 20km
     fu10 = interpolate.RectBivariateSpline(dat.x, dat.y, dat.u_10km)
     fv10 = interpolate.RectBivariateSpline(dat.x, dat.y, dat.v_10km)
     fzeta10 = interpolate.RectBivariateSpline(dat.x, dat.y, dat.vor_10km)
-    # 20km
-    fu20 = interpolate.RectBivariateSpline(dat.x, dat.y, dat.u_20km)
-    fv20 = interpolate.RectBivariateSpline(dat.x, dat.y, dat.v_20km)
-    fzeta20 = interpolate.RectBivariateSpline(dat.x, dat.y, dat.vor_20km)
 
-    fu = [fu0, fu10, fu20]
-    fv = [fv0, fv10, fv20]
-    fzeta = [fzeta0, fzeta10, fzeta20]
+    fu = [fu0, fu5, fu10]
+    fv = [fv0, fv5, fv10]
+    fzeta = [fzeta0, fzeta5, fzeta10]
 
     return fu, fv, fzeta
