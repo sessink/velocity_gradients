@@ -33,6 +33,7 @@ __pycache__/
 /old/*
 /src_from_visnu/*
 /src_old/*
+/notebooks/dask-worker-space/*
 
 # Distribution / packaging
 .Python
