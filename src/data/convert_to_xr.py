@@ -5,7 +5,11 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-data = pd.read_pickle('../data/drifters/posveldata_3h.pkl')
+import warnings
+warnings.simplefilter("ignore",category=FutureWarning)
+warnings.simplefilter("ignore",category=RuntimeWarning)
+
+data = pd.read_pickle('./data/drifters/posveldata_3h.pkl')
 
 liste = []
 for drif in data.index.unique():
@@ -23,4 +27,4 @@ ds['u'] = ds.u.where( (ds.u>-1.5) &  (ds.u<1.5))
 ds['v'] = ds.v.where( (ds.v>-1.5) &  (ds.v<1.5))
 
 ds = ds.drop(['uv_filt','uv','lon_filt','lat_filt'])
-ds.to_netcdf('../data/drifters/posveldata_xr.nc')
+ds.to_netcdf('./data/drifters/posveldata_xr.nc')
