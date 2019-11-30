@@ -77,4 +77,5 @@ res = pool.map(par_lengths, iterable, chunksize=get_chunksize(iterable,num_proce
 pool.close()
 print((time()-start)/60)
 
+res = np.array(res)
 np.save('initial_lengths.npy',res)
