@@ -5,7 +5,8 @@ rule all:
         expand("viz/{graph}.{fmt}", graph=["rulegraph", "dag"], fmt=["pdf", "png"]),
         'data/drifters/posveldata_3h.pkl',
         # 'data/psom/sensitivity_length.feather',
-        'figures/sensitivity.pdf'
+        'figures/sensitivity.pdf',
+        expand('data/clusters/combinations_lt_10_1h_{split}.nc', split=['00','01','02','03','04','05'])
 
 rule read_data:
     input:
@@ -14,6 +15,31 @@ rule read_data:
         'data/drifters/posveldata_3h.pkl'
     script:
         'src/data/read_filter_bin_pandas_data.py'
+
+rule convert_to_xr:
+    input:
+        'data/drifters/posveldata_3h.pkl'
+    output:
+        'data/drifters/posveldata_xr.nc'
+    script:
+        'src/data/convert_to_xr.py'
+
+rule initial_length:
+    input:
+        'data/drifters/posveldata_xr.nc'
+    output:
+        'data/drifters/initial_lengths.npy'
+    script:
+        'src/data/compute_initial_lengths.py'
+
+rule compute_grad_u:
+    input:
+        'data/drifters/posveldata_xr.nc',
+        'data/drifters/initial_lengths.npy'
+    output:
+        'data/clusters/combinations_lt_10_1h_{split}.nc'
+    script:
+        'src/data/gradu_calculation.py'
 
 rule sensitivity:
     input:

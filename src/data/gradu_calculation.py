@@ -1,5 +1,6 @@
 import sys
 sys.path.append('../scripts/')
+from time import time
 
 import numpy as np
 import pandas as pd
@@ -118,6 +119,14 @@ def apply_to_ds(i):
     series = [calc_lengths(temp) for temp in timeseries]
     return xr.concat(series, dim='time')
 
+def get_chunksize(iterable,num_process):
+    split_div = 2
+    chunksize, extra = divmod(len(iterable), num_process * split_div)
+    if extra:
+        chunksize += 1
+    if len(iterable) == 0:
+        chunksize = 0
+    return chunksize
 
 # %% MAIN
 ds = xr.open_dataset('./data/drifters/posveldata_xr.nc')
