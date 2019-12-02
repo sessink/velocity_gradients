@@ -7,25 +7,56 @@ def calc_aspect(xs, ys):
     w, v = np.linalg.eig(cov)
     return bn.nanmin(w) / bn.nanmax(w)
 
-def bootstrap_ci(zetai_mean, vorti, N):
+def bootstrap_ci(array):
     import numpy as np
+    import bottleneck as bn
     from sklearn.utils import resample
     import scipy.stats as stats
 
+    N = array.sizeå
     n_iterations = 1000
-    n_size = int(N * 0.50)
+    n_size = int(N)
     alpha = 0.95  # 95% confidence interval
 
     statss = []
     for i in range(n_iterations):
         sample_ind = resample(np.arange(N), n_samples=n_size)
-        error = stats.pearsonr(zetai_mean[sample_ind], vorti[sample_ind])[0]**2
-        statss.append(error)
+        stat = bn.nanmean(array[sample_ind])
+        statss.append(stat)
 
     ordered = np.sort(statss)
     lower = np.percentile(ordered, 100 * (1 - alpha) / 2)
     upper = np.percentile(ordered, 100 * (alpha + (1 - alpha) / 2))
     return lower, upper
+
+def plot_ci(array,ax,**kwargs):
+    return ax.fill_between(dat.time.values,dat[array].mean(axis=0)-dat[array].std(axis=0),
+                          dat[array].mean(axis=0)+dat[array].std(axis=0),**kwargs)
+
+def alphabet(ax):
+    for j, axx in enumerate(ax):
+        axx.annotate(chr(j+65), (0, 1.02),
+                     xycoords='axes fraction',
+                     weight='bold')
+
+def get_percentiles(array):
+    alpha = 0.95
+    return np.nanpercentile(array, 100 * (1 - alpha) / 2), np.nanpercentile(array, 100 * (alpha + (1 - alpha) / 2))
+
+def get_ci(dat,array):
+    per = []
+    for t in dat.time:
+        per.append(get_percentiles(dat[array].sel(time=t)))
+    per = np.array(per)
+    return per[:,0],per[:,1]
+
+def da_median(dat,array):
+    ''' Compute median of chunked datarray
+    '''
+    per = []
+    for t in dat.time:
+        per.append(np.nanpercentile(dat[array].sel(time=t), 50))
+    return np.array(per)
 
 
 def r2(x, y):
