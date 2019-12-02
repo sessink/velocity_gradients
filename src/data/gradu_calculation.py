@@ -1,26 +1,24 @@
 import sys
 sys.path.append('../scripts/')
 from time import time
+from itertools import combinations
+import warnings
 
 import numpy as np
 import pandas as pd
 import xarray as xr
+import bottleneck as bn
 
-from scipy.special import gammaln
+from scipy.special import gammaln,comb
 from scipy.optimize import curve_fit, minimize
 from scipy.stats import pearsonr
-
-from deformtools.haversine import haversine
 import scipy.linalg as la
 from scipy.spatial import ConvexHull
-import bottleneck as bn
-import gsw
-from scipy.special import comb
-from itertools import combinations
 
+from deformtools.haversine import haversine
 from multiprocessing import Pool
+import gsw
 
-import warnings
 warnings.simplefilter("ignore",category=FutureWarning)
 warnings.simplefilter("ignore",category=RuntimeWarning)
 
@@ -33,6 +31,7 @@ def random_combination(iterable, r):
     return tuple(pool[i] for i in indices)
 
 def least_square_method(dspt):
+        npol =6
         com = np.array( [bn.nanmean(dspt.lon),bn.nanmean(dspt.lat)])
         timeseries=False
         ncc = dspt.lon.size
@@ -129,9 +128,9 @@ def get_chunksize(iterable,num_process):
     return chunksize
 
 # %% MAIN
+global ds
 ds = xr.open_dataset('./data/drifters/posveldata_xr.nc')
 res = np.load('./data/clusters/initial_lengths.npy',allow_pickle=True)
-
 
 # %%
 # select polygons of a certain inital size
@@ -145,17 +144,19 @@ combin=[]
 for combi in combinations(np.arange(N),npol):
     combin.append(combi)
 
+
 ds = ds.sel(time=slice('2015-09-02','2015-09-12'))
 ds['u'] = ds.u.where(ds.u !=0)
 ds['v'] = ds.v.where(ds.v !=0)
 ds = ds.dropna('id',how='all')
 ds = ds.dropna('time',how='all',thresh=3)
 
-sel_co_split = np.split(selected_co,6)
+sel_co_split = np.split( selected_co , np.arange(2000,48001,2000))
 # %%
 num_process = 8
 pool = Pool(processes=num_process)
 
+sel_co_split = selected_co[46001:]
 for i,split in enumerate(sel_co_split):
     result=[]
     multi = []

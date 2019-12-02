@@ -42,7 +42,7 @@ def calc_inital_length(dspt):
         k+=1
     lengths=np.array(lengths)
     if np.isfinite(lengths).sum()==k:
-        length = np.mean(lengths)
+        length = np.sqrt( np.mean(lengths**2) )
     else:
         length = np.nan
     return length
