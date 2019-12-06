@@ -1,5 +1,6 @@
+import numpy as np
+
 def calc_aspect(xs, ys):
-    import numpy as np
     import bottleneck as bn
 
     points = np.vstack([xs, ys])
@@ -8,7 +9,6 @@ def calc_aspect(xs, ys):
     return bn.nanmin(w) / bn.nanmax(w)
 
 def bootstrap_ci(array):
-    import numpy as np
     import bottleneck as bn
     from sklearn.utils import resample
     import scipy.stats as stats
@@ -67,7 +67,6 @@ def make_hex(x0, y0, L, skew, M):
     '''
     make a polygon with M vertices, length L, and skewness skew
     '''
-    import numpy as np
     import random
     import math
 
@@ -94,7 +93,6 @@ def make_hex(x0, y0, L, skew, M):
 
 def make_n_hexs(L, skew, N, M):
     import random
-    import numpy as np
     x = np.zeros((N, M))
     y = np.zeros((N, M))
     for i in range(N):
