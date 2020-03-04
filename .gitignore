@@ -24,6 +24,7 @@ __pycache__/
 /benchmark/*
 /figures/*
 /data/*
+/old_docs/*
 /literature/*
 /papers_to_read/*
 /src/pwp/
