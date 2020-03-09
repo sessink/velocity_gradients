@@ -13,7 +13,7 @@ def bootstrap_ci(array):
     from sklearn.utils import resample
     import scipy.stats as stats
 
-    N = array.sizeå
+    N = array.size
     n_iterations = 1000
     n_size = int(N)
     alpha = 0.95  # 95% confidence interval
@@ -77,19 +77,24 @@ def make_hex(x0, y0, L, skew, M):
     angle = np.arange(degstart, degstart + 360, 360 / M)
     angle[angle > 360] = angle[angle > 360] - 360
 
-    random_stretch = random.randint(0, 2)
+#     random_stretch = random.randint(0, 2)
     i = 0
+#     offset =  random.randint(0, 180)
     for j, angle in enumerate(angle):
-        if j == random_stretch:
-            alpha = skew
-        else:
-            alpha = 1
-        xx[i] = x0 + alpha * L * math.cos(math.radians(angle))
-        yy[i] = y0 + alpha * L * math.sin(math.radians(angle))
+        La = L*skew
+        Lb = L
+        xx[i] = La * math.cos(math.radians(angle))
+        yy[i] = Lb * math.sin(math.radians(angle))
         i += 1
+        
+        
+    theta = np.radians(random.randint(0, 360))
+    r = np.array(( (np.cos(theta), -np.sin(theta)),
+                 (np.sin(theta),  np.cos(theta)) ))
+    
+    A = r.dot([xx,yy])
 
-    return xx, yy
-
+    return A[0,:]+x0, A[1,:]+y0
 
 def make_n_hexs(L, skew, N, M):
     import random
