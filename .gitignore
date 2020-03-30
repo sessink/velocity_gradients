@@ -17,6 +17,7 @@ __pycache__/
 **.pkl
 **.cdf
 **.feather
+**.key
 
 # folders
 /viz/*.pdf
