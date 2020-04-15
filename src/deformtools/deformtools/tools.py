@@ -55,7 +55,8 @@ def da_median(dat,array):
     '''
     per = []
     for t in dat.time:
-        per.append(np.nanpercentile(dat[array].sel(time=t), 50))
+        # per.append(np.nanpercentile(dat[array].sel(time=t), 50))
+        per.append(dat[array].sel(time=t).chunk({'clusters': -1}).quantile(0.5))
     return np.array(per)
 
 
@@ -86,12 +87,12 @@ def make_hex(x0, y0, L, skew, M):
         xx[i] = La * math.cos(math.radians(angle))
         yy[i] = Lb * math.sin(math.radians(angle))
         i += 1
-        
-        
+
+
     theta = np.radians(random.randint(0, 360))
     r = np.array(( (np.cos(theta), -np.sin(theta)),
                  (np.sin(theta),  np.cos(theta)) ))
-    
+
     A = r.dot([xx,yy])
 
     return A[0,:]+x0, A[1,:]+y0
